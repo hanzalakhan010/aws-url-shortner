@@ -4,6 +4,7 @@ import string
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
+import click
 from flask import Flask, jsonify, redirect, request
 from sqlalchemy import DateTime, String, Text, create_engine
 from sqlalchemy.exc import IntegrityError
@@ -37,7 +38,6 @@ def get_database_url() -> str:
 def create_app() -> Flask:
     app = Flask(__name__)
     engine = create_engine(get_database_url(), pool_pre_ping=True)
-    Base.metadata.create_all(engine)
 
     @app.get("/")
     def health() -> dict[str, str]:
@@ -98,6 +98,32 @@ def generate_short_code(length: int = 6) -> str:
 
 
 app = create_app()
+
+
+@app.cli.command("init-db")
+def init_db_command() -> None:
+    engine = create_engine(get_database_url(), pool_pre_ping=True)
+    Base.metadata.create_all(engine)
+    print("Database initialized.")
+
+
+@app.cli.command("clean-db")
+@click.option("--yes", is_flag=True, help="Skip confirmation prompt.")
+@click.option("--recreate", is_flag=True, help="Recreate tables after cleanup.")
+def clean_db_command(yes: bool, recreate: bool) -> None:
+    if not yes and not click.confirm("This will delete all URL data. Continue?"):
+        click.echo("Aborted.")
+        return
+
+    engine = create_engine(get_database_url(), pool_pre_ping=True)
+    Base.metadata.drop_all(engine)
+
+    if recreate:
+        Base.metadata.create_all(engine)
+        click.echo("Database cleaned and recreated.")
+        return
+
+    click.echo("Database cleaned.")
 
 
 if __name__ == "__main__":

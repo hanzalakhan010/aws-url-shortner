@@ -39,7 +39,24 @@ Example response:
 uv sync
 export DATABASE_URL="postgresql+psycopg://postgres:password@localhost:5432/url_shortener"
 export BASE_URL="http://localhost:5000"
+uv run flask --app main init-db
 uv run python main.py
+```
+
+## Database Commands
+
+```bash
+# create tables if missing
+uv run flask --app main init-db
+
+# wipe all app tables (asks for confirmation)
+uv run flask --app main clean-db
+
+# wipe without prompt
+uv run flask --app main clean-db --yes
+
+# wipe and recreate tables in one command
+uv run flask --app main clean-db --yes --recreate
 ```
 
 ## EC2 Deployment Notes
@@ -50,6 +67,7 @@ uv run python main.py
 
 ```bash
 uv add gunicorn
+uv run flask --app main init-db
 uv run gunicorn -w 2 -b 0.0.0.0:5000 main:app
 ```
 
