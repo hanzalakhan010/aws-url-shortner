@@ -9,6 +9,9 @@ from flask import Flask, jsonify, redirect, request
 from sqlalchemy import DateTime, String, Text, create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class Base(DeclarativeBase):
@@ -38,6 +41,7 @@ def get_database_url() -> str:
 def create_app() -> Flask:
     app = Flask(__name__)
     engine = create_engine(get_database_url(), pool_pre_ping=True)
+    Base.metadata.create_all(engine)
 
     @app.get("/")
     def health() -> dict[str, str]:
